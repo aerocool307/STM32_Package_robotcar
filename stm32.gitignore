@@ -1,0 +1,27 @@
+# STM32CubeIDE build mappák
+/Debug/
+/Release/
+/build/
+
+# Object és ideiglenes fájlok
+*.o
+*.d
+*.elf
+*.bin
+*.hex
+*.map
+*.lst
+*.log
+
+# IDE fájlok
+*.launch
+*.settings/
+*.cproject
+*.project
+
+# Egyéb
+*.swp
+*.swo
+*.swn
+*.bak
+
