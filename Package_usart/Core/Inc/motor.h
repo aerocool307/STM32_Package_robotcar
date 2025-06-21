@@ -1,9 +1,5 @@
 
-/*
- * motor.h
- *
- */
-
+/* motor.h */
 
 #ifndef INC_MOTOR_H_
 #define INC_MOTOR_H_
@@ -11,7 +7,7 @@
 
 #include "stm32f7xx_hal.h"
 
-// STM32 GPIO definíciók (igazítsd a valós konfigurációhoz)
+// STM32 GPIO defination
 #define MOTORLATCH_GPIO_Port   GPIOA
 #define MOTORLATCH_Pin         GPIO_PIN_6
 
@@ -34,10 +30,10 @@
 #define MOTOR_D1_BIT  0 // Motor 4 IN1
 #define MOTOR_D2_BIT  6 // Motor 4 IN2
 
-
+// Hall szenzor adatai
+#define HALL_COUNT 8
 // Motorvezérlési struktúra
-
-extern TIM_HandleTypeDef htim1; // Motor C és D (PE9, PE11)
+extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim14;
 
 // Motor irány enum
@@ -64,6 +60,22 @@ void Motor_output(uint8_t output);
 void Motor_Set(MotorID motor, MotorDirection command, uint16_t speed);
 void Motor_SetSpeed(uint8_t motor_index, uint16_t speed);
 void MotorControl_HandleInput(uint8_t byte);
+void MotorControl_HandleBluetooth(uint8_t byte);  // PID vezérléshez
+
+// PID controller struktúra
+typedef struct {
+    float Kp;
+    float Ki;
+    float Kd;
+    float prev_error;
+    float integral;
+    float output;
+    float min_output;
+    float max_output;
+} PIDController;
+
+void PID_Init(PIDController* pid, float Kp, float Ki, float Kd, float min, float max);
+float PID_Compute(PIDController* pid, float setpoint, float measurement, float dt);
 
 
 #endif /* INC_MOTOR_H_ */

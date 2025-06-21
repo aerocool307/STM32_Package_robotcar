@@ -1,7 +1,5 @@
-/*
- * fatfs_sd.h
- *
- */
+
+/* fatfs_sd.h */
 
 #ifndef INC_FATFS_SD_H_
 #define INC_FATFS_SD_H_

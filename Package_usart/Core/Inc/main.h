@@ -49,8 +49,6 @@ extern "C" {
 
 /* USER CODE END EM */
 
-void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
@@ -129,10 +127,6 @@ void Error_Handler(void);
 #define M2PWM_GPIO_Port GPIOE
 #define Sensor_Right_Trig_Pin GPIO_PIN_15
 #define Sensor_Right_Trig_GPIO_Port GPIOE
-#define SD_CARD_SCK_Pin GPIO_PIN_10
-#define SD_CARD_SCK_GPIO_Port GPIOB
-#define SD_CARD_CS_Pin GPIO_PIN_12
-#define SD_CARD_CS_GPIO_Port GPIOB
 #define RMII_TXD1_Pin GPIO_PIN_13
 #define RMII_TXD1_GPIO_Port GPIOB
 #define LD3_Pin GPIO_PIN_14
@@ -145,6 +139,8 @@ void Error_Handler(void);
 #define Sensor_Front_Servo_GPIO_Port GPIOD
 #define STEPPER_MOTOR_Pin GPIO_PIN_15
 #define STEPPER_MOTOR_GPIO_Port GPIOD
+#define SD_CARD_CS_Pin GPIO_PIN_2
+#define SD_CARD_CS_GPIO_Port GPIOG
 #define USB_PowerSwitchOn_Pin GPIO_PIN_6
 #define USB_PowerSwitchOn_GPIO_Port GPIOG
 #define USB_OverCurrent_Pin GPIO_PIN_7
@@ -169,6 +165,8 @@ void Error_Handler(void);
 #define NEO_M8N_TX_GPIO_Port GPIOC
 #define NEO_M8N_RX_Pin GPIO_PIN_2
 #define NEO_M8N_RX_GPIO_Port GPIOD
+#define SD_CARD_SCK_Pin GPIO_PIN_3
+#define SD_CARD_SCK_GPIO_Port GPIOD
 #define SIM800H_PWRKY_Pin GPIO_PIN_4
 #define SIM800H_PWRKY_GPIO_Port GPIOD
 #define SIM800H_TX_Pin GPIO_PIN_5

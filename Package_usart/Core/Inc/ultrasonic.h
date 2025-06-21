@@ -1,9 +1,5 @@
-/*
- * ultrasonic.h
- *
- *  Created on: Jun 9, 2025
- *      Author: Qwerty
- */
+
+/* ultrasonic.h */
 
 #ifndef INC_ULTRASONIC_H_
 #define INC_ULTRASONIC_H_
@@ -11,8 +7,6 @@
 #include "stm32f7xx_hal.h"
 
 
-
-// Módosítsd az alábbi GPIO portokat és pineket a valós bekötés szerint
 //Front
 #define US1_TRIG_GPIO GPIOA
 #define US1_TRIG_PIN  GPIO_PIN_4
@@ -36,8 +30,10 @@
 #define US4_ECHO_GPIO GPIOA
 #define US4_ECHO_PIN  GPIO_PIN_3
 
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim);
 void Ultrasonic_Init(void);
 float Ultrasonic_ReadDistance(uint8_t index);
-void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim);
+float Ultrasonic_SingleMeasure(uint8_t index);
+void Ultrasonic_SendDistanceUART(uint8_t index);
 
 #endif /* INC_ULTRASONIC_H_ */

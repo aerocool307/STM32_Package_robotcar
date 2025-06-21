@@ -1,18 +1,14 @@
-/*
- * fatfs_sd.c
- *
- */
 
-
+/* fatfs_sd.c */
 
 #include "fatfs_sd.h"
-//#include "spi.h"
-//#include "gpio.h"
+#include "spi.h"
+#include "gpio.h"
 #include "main.h"
 
-extern SPI_HandleTypeDef hspi3;
-#define SD_CS_GPIO_Port GPIOA
-#define SD_CS_Pin GPIO_PIN_15
+extern SPI_HandleTypeDef hspi2;
+#define SD_CS_GPIO_Port GPIOG
+#define SD_CS_Pin GPIO_PIN_2
 
 void SD_Select(void) {
     HAL_GPIO_WritePin(SD_CS_GPIO_Port, SD_CS_Pin, GPIO_PIN_RESET);
@@ -24,7 +20,7 @@ void SD_Deselect(void) {
 
 uint8_t SD_SPI_TxRx(uint8_t data) {
     uint8_t received;
-    HAL_SPI_TransmitReceive(&hspi3, &data, &received, 1, HAL_MAX_DELAY);
+    HAL_SPI_TransmitReceive(&hspi2, &data, &received, 1, HAL_MAX_DELAY);
     return received;
 }
 uint8_t SD_ReadSingleBlock(uint8_t *buff, uint32_t sector) {

@@ -1,11 +1,10 @@
 
-/*
- * motor.c
- *
- */
+/* motor.c */
 
 #include "motor.h"
 #include "main.h"
+#include "tim.h"
+#include "hall.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -14,6 +13,8 @@
 static uint8_t latch_state = 0;
 static char cmd_buffer[CMD_BUFFER_SIZE];
 static uint8_t cmd_index = 0;
+// Globális PID példány minden motorhoz
+PIDController pid_m1, pid_m2, pid_m3, pid_m4;
 
 extern UART_HandleTypeDef huart3;
 extern TIM_HandleTypeDef htim1;
@@ -43,19 +44,22 @@ void Motor_Init(void)
     Motor_output(0x00);
 
     // Indítsuk el a PWM kimeneteket
-       HAL_TIM_PWM_Start(&htim14, TIM_CHANNEL_1);  // Motor1
-       HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);  // Motor2
-       HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);  // Motor3
-       HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);  // Motor4
+    HAL_TIM_PWM_Start(&htim14, TIM_CHANNEL_1);  // Motor1
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);  // Motor2
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);  // Motor3
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);  // Motor4
 
-       // Opcionálisan: kezdeti kitöltési tényező
-       __HAL_TIM_SET_COMPARE(&htim14, TIM_CHANNEL_1, 0);
-       __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0);
-       __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
-       __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0);
+    // Opcionálisan: kezdeti kitöltési tényező
+    __HAL_TIM_SET_COMPARE(&htim14, TIM_CHANNEL_1, 0);
+    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0);
+    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
+    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0);
+
+    PID_Init(&pid_m1, 1.0f, 0.1f, 0.05f, 0, 100);
+    PID_Init(&pid_m2, 1.0f, 0.1f, 0.05f, 0, 100);
+    PID_Init(&pid_m3, 1.0f, 0.1f, 0.05f, 0, 100);
+    PID_Init(&pid_m4, 1.0f, 0.1f, 0.05f, 0, 100);
 }
-
-
 
 // Motor kimenetek bitenkénti beállítása (shift regiszter frissítés)
 void Motor_output(uint8_t output)
@@ -74,6 +78,7 @@ void Motor_output(uint8_t output)
      HAL_GPIO_WritePin(MOTORLATCH_GPIO_Port, MOTORLATCH_Pin, GPIO_PIN_SET);
 
 }
+
 // Egy motor irányának és sebességének beállítása
 void Motor_Set(MotorID motor, MotorDirection command, MotorState speed)
 {
@@ -81,6 +86,7 @@ void Motor_Set(MotorID motor, MotorDirection command, MotorState speed)
 	uint8_t a, b;
     uint32_t pwm_channel = 0;
 
+    // Motor választás
     switch (motor)
     {
         case MOTOR_1:
@@ -106,7 +112,6 @@ void Motor_Set(MotorID motor, MotorDirection command, MotorState speed)
         default:
             return;
     }
-
 
     // Irány beállítása
     switch (command) {
@@ -134,7 +139,7 @@ void Motor_Set(MotorID motor, MotorDirection command, MotorState speed)
         __HAL_TIM_SET_COMPARE(&htim1, pwm_channel, speed);  // Többi motor: TIM1
 }
 
-
+// Motor sebességének beállítása
 void Motor_SetSpeed(uint8_t motor_index, uint16_t speed)
 {
     switch (motor_index) {
@@ -153,7 +158,7 @@ void Motor_SetSpeed(uint8_t motor_index, uint16_t speed)
     }
 }
 
-/// UART-ból jövő parancs feldolgozása
+// UART-ból jövő parancs feldolgozása
 void MotorControl_HandleInput(uint8_t byte)
 {
     if (byte == '\n' || byte == '\r') {
@@ -197,3 +202,60 @@ void MotorControl_HandleInput(uint8_t byte)
     }
 }
 
+void PID_Init(PIDController* pid, float Kp, float Ki, float Kd, float min, float max)
+{
+    pid->Kp = Kp;
+    pid->Ki = Ki;
+    pid->Kd = Kd;
+    pid->prev_error = 0;
+    pid->integral = 0;
+    pid->output = 0;
+    pid->min_output = min;
+    pid->max_output = max;
+}
+
+float PID_Compute(PIDController* pid, float setpoint, float measurement, float dt)
+{
+    float error = setpoint - measurement;
+    pid->integral += error * dt;
+    float derivative = (error - pid->prev_error) / dt;
+
+    pid->output = pid->Kp * error + pid->Ki * pid->integral + pid->Kd * derivative;
+
+    if (pid->output > pid->max_output) pid->output = pid->max_output;
+    if (pid->output < pid->min_output) pid->output = pid->min_output;
+
+    pid->prev_error = error;
+
+    return pid->output;
+}
+
+// Bluetooth input handler (pl. UART2-ből hívod meg)
+void MotorControl_HandleBluetooth(uint8_t byte)
+{
+    static char bt_cmd[64];
+    static uint8_t idx = 0;
+
+    if (byte == '\n' || byte == '\r') {
+        bt_cmd[idx] = '\0';
+
+        // példa: "spd 100" → célsebesség 100 RPM
+        int spd = 0;
+        if (sscanf(bt_cmd, "spd %d", &spd) == 1) {
+            float dt = 0.1f;  // időalap
+            float actual_speed = Get_Hall_Speed();
+            float pwm = PID_Compute(&pid_m1, spd, actual_speed, dt);
+            Motor_Set(MOTOR_1, FORWARD, (uint16_t)pwm);
+        }
+
+        idx = 0;
+    } else if (idx < sizeof(bt_cmd) - 1) {
+        bt_cmd[idx++] = byte;
+    }
+    /*
+    //pid szabályozás
+    float actual_rpm = Get_Hall_Speed(0);  // 0 = MOTOR_1
+    float pwm = PID_Compute(&pid_m1, target_rpm, actual_rpm, dt);
+    Motor_Set(MOTOR_1, FORWARD, (uint16_t)pwm);
+    */
+}

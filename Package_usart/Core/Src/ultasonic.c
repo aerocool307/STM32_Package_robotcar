@@ -1,15 +1,14 @@
-/*
- * ultasonic.c
- *
- */
 
-
-// ultrasonic.c
+/* ultasonic.c */
 
 #include "ultrasonic.h"
 #include "main.h"
+#include "servo.h"
+#include <stdio.h> // sprintf-hez
+#include <string.h>
 
 extern TIM_HandleTypeDef htim5;
+extern UART_HandleTypeDef huart3;
 
 #define NUM_SENSORS 4
 
@@ -28,6 +27,7 @@ static uint8_t polarity_state[NUM_SENSORS] = {0, 0, 0, 0}; // 0 = rising, 1 = fa
 // TRIG lábak GPIO portjai és pinek (statikusan)
 GPIO_TypeDef* trig_ports[NUM_SENSORS] = {GPIOA, GPIOE, GPIOE, GPIOE};
 uint16_t trig_pins[NUM_SENSORS]       = {GPIO_PIN_4, GPIO_PIN_10, GPIO_PIN_12, GPIO_PIN_15};
+
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
@@ -82,14 +82,37 @@ void Ultrasonic_Init(void)
 
 float Ultrasonic_ReadDistance(uint8_t index)
 {
-    if (index > 3) return -1;
+	if (index > 3) return -1;
 
+	    if (index == 0) {
+	        // Front szenzor – mozdítsuk el jobbra, balra, majd előre
+	        float dist_left, dist_center, dist_right;
+
+	        Servo_SetAngle(30);
+	        dist_left = Ultrasonic_SingleMeasure(index);
+
+	        Servo_SetAngle(90);
+	        dist_center = Ultrasonic_SingleMeasure(index);
+
+	        Servo_SetAngle(150);
+	        dist_right = Ultrasonic_SingleMeasure(index);
+
+	        Servo_SetAngle(90); // Vissza alapállásba
+
+	        // Válasszuk ki a legkisebb távolságot, vagy átlagolhatunk is
+	        return (dist_left + dist_center + dist_right) / 3.0f;
+	    } else {
+	        return Ultrasonic_SingleMeasure(index);
+	    }
+}
+
+float Ultrasonic_SingleMeasure(uint8_t index)
+{
     uint32_t channel = tim_channels[index];
 
     capture_done[index] = 0;
     __HAL_TIM_SET_CAPTUREPOLARITY(&htim5, channel, TIM_INPUTCHANNELPOLARITY_RISING);
 
-    // Trigger kiadása
     HAL_GPIO_WritePin(trig_ports[index], trig_pins[index], GPIO_PIN_RESET);
     HAL_Delay(1);
     HAL_GPIO_WritePin(trig_ports[index], trig_pins[index], GPIO_PIN_SET);
@@ -106,4 +129,18 @@ float Ultrasonic_ReadDistance(uint8_t index)
                     : (0xFFFF - ic_start[index] + ic_end[index]);
 
     return (float)diff * 0.0343f / 2.0f;
+}
+
+void Ultrasonic_SendDistanceUART(uint8_t index)
+{
+    float distance = Ultrasonic_ReadDistance(index);
+    char msg[64];
+
+    if (distance < 0) {
+        sprintf(msg, "Sensor %d: Timeout\r\n", index);
+    } else {
+        sprintf(msg, "Sensor %d: %.2f cm\r\n", index, distance); // @suppress("Float formatting support")
+    }
+
+    HAL_UART_Transmit(&huart3, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 }
