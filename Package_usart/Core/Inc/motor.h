@@ -54,6 +54,12 @@ typedef enum {
 // Enum a motor állapothoz
 typedef uint16_t MotorState;
 
+// Get hall speed motor indexek
+#define MOTOR_1_INDEX 0
+#define MOTOR_2_INDEX 1
+#define MOTOR_3_INDEX 2
+#define MOTOR_4_INDEX 3
+
 // Function prototypes
 void Motor_Init(void);
 void Motor_output(uint8_t output);
@@ -62,20 +68,6 @@ void Motor_SetSpeed(uint8_t motor_index, uint16_t speed);
 void MotorControl_HandleInput(uint8_t byte);
 void MotorControl_HandleBluetooth(uint8_t byte);  // PID vezérléshez
 
-// PID controller struktúra
-typedef struct {
-    float Kp;
-    float Ki;
-    float Kd;
-    float prev_error;
-    float integral;
-    float output;
-    float min_output;
-    float max_output;
-} PIDController;
-
-void PID_Init(PIDController* pid, float Kp, float Ki, float Kd, float min, float max);
-float PID_Compute(PIDController* pid, float setpoint, float measurement, float dt);
 
 
 #endif /* INC_MOTOR_H_ */

@@ -59,7 +59,7 @@ extern SPI_HandleTypeDef hspi2;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
-extern TIM_HandleTypeDef htim5;
+extern TIM_HandleTypeDef htim8;
 extern UART_HandleTypeDef huart5;
 extern UART_HandleTypeDef huart7;
 extern UART_HandleTypeDef huart2;
@@ -291,17 +291,17 @@ void USART3_IRQHandler(void)
 }
 
 /**
-  * @brief This function handles TIM5 global interrupt.
+  * @brief This function handles TIM8 capture compare interrupt.
   */
-void TIM5_IRQHandler(void)
+void TIM8_CC_IRQHandler(void)
 {
-  /* USER CODE BEGIN TIM5_IRQn 0 */
+  /* USER CODE BEGIN TIM8_CC_IRQn 0 */
 
-  /* USER CODE END TIM5_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim5);
-  /* USER CODE BEGIN TIM5_IRQn 1 */
+  /* USER CODE END TIM8_CC_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim8);
+  /* USER CODE BEGIN TIM8_CC_IRQn 1 */
 
-  /* USER CODE END TIM5_IRQn 1 */
+  /* USER CODE END TIM8_CC_IRQn 1 */
 }
 
 /**

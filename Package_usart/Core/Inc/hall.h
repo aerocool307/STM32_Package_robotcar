@@ -5,6 +5,7 @@
 #define INC_HALL_H_
 
 #include "stm32f7xx_hal.h"
+#include <stdint.h>
 
 #define HALL_COUNT 8
 #define MOTOR_COUNT 4
@@ -38,7 +39,7 @@
 void Hall_GPIO_Init(void);
 void Hall_ReadAll(uint8_t* values);
 void Hall_DebugPrint(void);// Összes Hall-szenzor állapotának kiírása UART-ra (debug célra)
-float Get_Hall_Speed(uint8_t motor_index);  // ÚJ: 0–3 motor index
+float Get_Hall_Speed(uint8_t motor_index);  // Motor index: 0=M1, 1=M2, 2=M3, 3=M4
 void Hall_UpdateCounter(uint8_t hall_index);  // EXTI-nél hívjuk meg
 
 #endif /* INC_HALL_H_ */

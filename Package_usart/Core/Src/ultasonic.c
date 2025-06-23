@@ -7,7 +7,7 @@
 #include <stdio.h> // sprintf-hez
 #include <string.h>
 
-extern TIM_HandleTypeDef htim5;
+extern TIM_HandleTypeDef htim8;
 extern UART_HandleTypeDef huart3;
 
 #define NUM_SENSORS 4
@@ -33,7 +33,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
     uint8_t index;
 
-    if (htim->Instance != TIM5) return;
+    if (htim->Instance != TIM8) return;
 
     if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) index = 0;
     else if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2) index = 1;
@@ -74,10 +74,10 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 
 void Ultrasonic_Init(void)
 {
-    HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);
-    HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_2);
-    HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_3);
-    HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_4);
+    HAL_TIM_IC_Start_IT(&htim8, TIM_CHANNEL_1);
+    HAL_TIM_IC_Start_IT(&htim8, TIM_CHANNEL_2);
+    HAL_TIM_IC_Start_IT(&htim8, TIM_CHANNEL_3);
+    HAL_TIM_IC_Start_IT(&htim8, TIM_CHANNEL_4);
 }
 
 float Ultrasonic_ReadDistance(uint8_t index)

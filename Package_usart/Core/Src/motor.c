@@ -13,8 +13,7 @@
 static uint8_t latch_state = 0;
 static char cmd_buffer[CMD_BUFFER_SIZE];
 static uint8_t cmd_index = 0;
-// Globális PID példány minden motorhoz
-PIDController pid_m1, pid_m2, pid_m3, pid_m4;
+
 
 extern UART_HandleTypeDef huart3;
 extern TIM_HandleTypeDef htim1;
@@ -55,10 +54,6 @@ void Motor_Init(void)
     __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
     __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0);
 
-    PID_Init(&pid_m1, 1.0f, 0.1f, 0.05f, 0, 100);
-    PID_Init(&pid_m2, 1.0f, 0.1f, 0.05f, 0, 100);
-    PID_Init(&pid_m3, 1.0f, 0.1f, 0.05f, 0, 100);
-    PID_Init(&pid_m4, 1.0f, 0.1f, 0.05f, 0, 100);
 }
 
 // Motor kimenetek bitenkénti beállítása (shift regiszter frissítés)
@@ -202,33 +197,6 @@ void MotorControl_HandleInput(uint8_t byte)
     }
 }
 
-void PID_Init(PIDController* pid, float Kp, float Ki, float Kd, float min, float max)
-{
-    pid->Kp = Kp;
-    pid->Ki = Ki;
-    pid->Kd = Kd;
-    pid->prev_error = 0;
-    pid->integral = 0;
-    pid->output = 0;
-    pid->min_output = min;
-    pid->max_output = max;
-}
-
-float PID_Compute(PIDController* pid, float setpoint, float measurement, float dt)
-{
-    float error = setpoint - measurement;
-    pid->integral += error * dt;
-    float derivative = (error - pid->prev_error) / dt;
-
-    pid->output = pid->Kp * error + pid->Ki * pid->integral + pid->Kd * derivative;
-
-    if (pid->output > pid->max_output) pid->output = pid->max_output;
-    if (pid->output < pid->min_output) pid->output = pid->min_output;
-
-    pid->prev_error = error;
-
-    return pid->output;
-}
 
 // Bluetooth input handler (pl. UART2-ből hívod meg)
 void MotorControl_HandleBluetooth(uint8_t byte)
@@ -243,7 +211,7 @@ void MotorControl_HandleBluetooth(uint8_t byte)
         int spd = 0;
         if (sscanf(bt_cmd, "spd %d", &spd) == 1) {
             float dt = 0.1f;  // időalap
-            float actual_speed = Get_Hall_Speed();
+            float actual_speed = Get_Hall_Speed(MOTOR_1_INDEX);
             float pwm = PID_Compute(&pid_m1, spd, actual_speed, dt);
             Motor_Set(MOTOR_1, FORWARD, (uint16_t)pwm);
         }

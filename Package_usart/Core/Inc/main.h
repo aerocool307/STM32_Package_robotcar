@@ -83,14 +83,6 @@ void Error_Handler(void);
 #define SD_CARD_MISO_GPIO_Port GPIOC
 #define SD_CARD_MOSI_Pin GPIO_PIN_3
 #define SD_CARD_MOSI_GPIO_Port GPIOC
-#define Sensor_Front_Echo_Pin GPIO_PIN_0
-#define Sensor_Front_Echo_GPIO_Port GPIOA
-#define Sensor_Back_Echo_Pin GPIO_PIN_1
-#define Sensor_Back_Echo_GPIO_Port GPIOA
-#define Sensor_Left_Echo_Pin GPIO_PIN_2
-#define Sensor_Left_Echo_GPIO_Port GPIOA
-#define Sensor_Right_Echo_Pin GPIO_PIN_3
-#define Sensor_Right_Echo_GPIO_Port GPIOA
 #define Sensor_Front_Trig_Pin GPIO_PIN_4
 #define Sensor_Front_Trig_GPIO_Port GPIOA
 #define Motor_shield_Latch_Pin GPIO_PIN_6
@@ -145,8 +137,6 @@ void Error_Handler(void);
 #define USB_PowerSwitchOn_GPIO_Port GPIOG
 #define USB_OverCurrent_Pin GPIO_PIN_7
 #define USB_OverCurrent_GPIO_Port GPIOG
-#define NEO_M8N_PPS_Pin GPIO_PIN_8
-#define NEO_M8N_PPS_GPIO_Port GPIOC
 #define USB_SOF_Pin GPIO_PIN_8
 #define USB_SOF_GPIO_Port GPIOA
 #define USB_VBUS_Pin GPIO_PIN_9

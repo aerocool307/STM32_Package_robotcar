@@ -92,11 +92,11 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : USER_Btn_Pin NEO_M8N_PPS_Pin */
-  GPIO_InitStruct.Pin = USER_Btn_Pin|NEO_M8N_PPS_Pin;
+  /*Configure GPIO pin : USER_Btn_Pin */
+  GPIO_InitStruct.Pin = USER_Btn_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  HAL_GPIO_Init(USER_Btn_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LORA_RESET_Pin Motor_shield_Data_Pin Motor_shield_Enable_Pin Motor_shield_Clock_Pin */
   GPIO_InitStruct.Pin = LORA_RESET_Pin|Motor_shield_Data_Pin|Motor_shield_Enable_Pin|Motor_shield_Clock_Pin;
