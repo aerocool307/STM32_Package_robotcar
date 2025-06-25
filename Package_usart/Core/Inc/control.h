@@ -8,6 +8,11 @@
 
 void Control_Init(void);
 void Control_SetTargetSpeed(uint8_t motor_index, float rpm);
-void Control_Update(float dt);  // időalap, pl. 0.1f másodperc
+void Control_Update(void);  // időalap, pl. 0.1f másodperc
+//void App_Init();
+//void App_Update(float dt);
+void MotorControl_HandleBluetooth(uint8_t byte);  // PID vezérléshez
+
+
 
 #endif /* INC_CONTROL_H_ */

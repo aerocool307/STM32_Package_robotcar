@@ -2,6 +2,8 @@
 /* motor.c */
 
 #include "motor.h"
+#include "control.h"
+#include "pid.h"
 #include "main.h"
 #include "tim.h"
 #include "hall.h"
@@ -13,6 +15,9 @@
 static uint8_t latch_state = 0;
 static char cmd_buffer[CMD_BUFFER_SIZE];
 static uint8_t cmd_index = 0;
+
+//extern PIDController pid_m1,pid_m2,pid_m3,pid_m4;
+//static float pid_target_rpm = 0;
 
 
 extern UART_HandleTypeDef huart3;
@@ -197,33 +202,3 @@ void MotorControl_HandleInput(uint8_t byte)
     }
 }
 
-
-// Bluetooth input handler (pl. UART2-ből hívod meg)
-void MotorControl_HandleBluetooth(uint8_t byte)
-{
-    static char bt_cmd[64];
-    static uint8_t idx = 0;
-
-    if (byte == '\n' || byte == '\r') {
-        bt_cmd[idx] = '\0';
-
-        // példa: "spd 100" → célsebesség 100 RPM
-        int spd = 0;
-        if (sscanf(bt_cmd, "spd %d", &spd) == 1) {
-            float dt = 0.1f;  // időalap
-            float actual_speed = Get_Hall_Speed(MOTOR_1_INDEX);
-            float pwm = PID_Compute(&pid_m1, spd, actual_speed, dt);
-            Motor_Set(MOTOR_1, FORWARD, (uint16_t)pwm);
-        }
-
-        idx = 0;
-    } else if (idx < sizeof(bt_cmd) - 1) {
-        bt_cmd[idx++] = byte;
-    }
-    /*
-    //pid szabályozás
-    float actual_rpm = Get_Hall_Speed(0);  // 0 = MOTOR_1
-    float pwm = PID_Compute(&pid_m1, target_rpm, actual_rpm, dt);
-    Motor_Set(MOTOR_1, FORWARD, (uint16_t)pwm);
-    */
-}

@@ -30,9 +30,10 @@
 #include "hall.h"
 #include "ultrasonic.h"
 #include "servo.h"
-#include "fatfs_sd.h"
+#include "user_diskio_spi.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdarg.h> //for va_list var arg functions
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,6 +54,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+//SPI_HandleTypeDef hspi1;
+//UART_HandleTypeDef huart3;
 
 /* --- UART fogadó bufferek --- */
 #define RX_BUFFER_SIZE 64
@@ -69,12 +72,22 @@ void SystemClock_Config(void);
 void Green_led_blink(void);
 void Hall_GPIO_Init(void);
 
-
+void myprintf(const char *fmt, ...);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+extern void myprintf(const char *fmt, ...) {
+  static char buffer[256];
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(buffer, sizeof(buffer), fmt, args);
+  va_end(args);
 
+  int len = strlen(buffer);
+  HAL_UART_Transmit(&huart3, (uint8_t*)buffer, len, -1);
+
+}
 /* USER CODE END 0 */
 
 /**
@@ -116,11 +129,93 @@ int main(void)
   MX_TIM4_Init();
   MX_FATFS_Init();
   MX_USART6_UART_Init();
-  MX_SPI2_Init();
   MX_UART7_Init();
   MX_UART5_Init();
   MX_TIM8_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
+  /* SD CARD USED BEGIN --------------------------------------------------------------------------------------------------------------------*/
+  myprintf("\r\n~ SD card demo by aerocool ~\r\n\r\n");
+
+  HAL_Delay(1000); //a short delay is important to let the SD card settle
+
+  //some variables for FatFs
+  FATFS FatFs; 	//Fatfs handle
+  FIL fil; 		//File handle
+  FRESULT fres; //Result after operations
+
+  //Open the file system
+  fres = f_mount(&FatFs, "", 1); //1=mount now
+  if (fres != FR_OK) {
+	myprintf("f_mount error (%i)\r\n", fres);
+	while(1);
+  }
+
+  //Let's get some statistics from the SD card
+  DWORD free_clusters, free_sectors, total_sectors;
+
+  FATFS* getFreeFs;
+
+  fres = f_getfree("", &free_clusters, &getFreeFs);
+  if (fres != FR_OK) {
+	myprintf("f_getfree error (%i)\r\n", fres);
+	while(1);
+  }
+
+  //Formula comes from ChaN's documentation
+  total_sectors = (getFreeFs->n_fatent - 2) * getFreeFs->csize;
+  free_sectors = free_clusters * getFreeFs->csize;
+
+  myprintf("SD card stats:\r\n%10lu KiB total drive space.\r\n%10lu KiB available.\r\n", total_sectors / 2, free_sectors / 2);
+
+  //Now let's try to open file "test.txt"
+  fres = f_open(&fil, "test.txt", FA_READ);
+  if (fres != FR_OK) {
+	myprintf("f_open error (%i)\r\n", fres);
+	while(1);
+  }
+  myprintf("I was able to open 'test.txt' for reading!\r\n");
+
+  //Read 30 bytes from "test.txt" on the SD card
+  BYTE readBuf[30];
+
+  //We can either use f_read OR f_gets to get data out of files
+  //f_gets is a wrapper on f_read that does some string formatting for us
+  TCHAR* rres = f_gets((TCHAR*)readBuf, 30, &fil);
+  if(rres != 0) {
+	myprintf("Read string from 'test.txt' contents: %s\r\n", readBuf);
+  } else {
+	myprintf("f_gets error (%i)\r\n", fres);
+  }
+
+  //Be a tidy kiwi - don't forget to close your file!
+  f_close(&fil);
+
+  //Now let's try and write a file "write.txt"
+  fres = f_open(&fil, "write.txt", FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
+  if(fres == FR_OK) {
+	myprintf("I was able to open 'write.txt' for writing\r\n");
+  } else {
+	myprintf("f_open error (%i)\r\n", fres);
+  }
+
+  //Copy in a string
+  strncpy((char*)readBuf, "a new file is made!", 19);
+  UINT bytesWrote;
+  fres = f_write(&fil, readBuf, 19, &bytesWrote);
+  if(fres == FR_OK) {
+	myprintf("Wrote %i bytes to 'write.txt'!\r\n", bytesWrote);
+  } else {
+	myprintf("f_write error (%i)\r\n", fres);
+  }
+
+  //Be a tidy kiwi - don't forget to close your file!
+  f_close(&fil);
+
+  //We're done, so de-mount the drive
+  f_mount(NULL, "", 0);
+
+  /* SD CARD USED END -----------------------------------------------------------------------------------------------------------------*/
 
   Servo_Init(); // A PWM indítása
   Ultrasonic_Init(); // Az IC bemenetek indítása
@@ -148,7 +243,8 @@ int main(void)
 	      Ultrasonic_SendDistanceUART(2); // Bal
 	      Ultrasonic_SendDistanceUART(3); // Jobb
 
-	      HAL_Delay(1000);
+	  Control_Update();
+	  HAL_Delay(100);  // vagy a kívánt ciklusidő
 
 
 	  HAL_UART_Receive_IT(&huart3, &rx_char, 1);         // UART3 fogadás (PC/parancs)
@@ -276,14 +372,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     switch (GPIO_Pin)
     {
-        case GPIO_PIN_0: Hall_UpdateCounter(0); break;
-        case GPIO_PIN_1: Hall_UpdateCounter(1); break;
-        case GPIO_PIN_2: Hall_UpdateCounter(2); break;
-        case GPIO_PIN_3: Hall_UpdateCounter(3); break;
-        case GPIO_PIN_4: Hall_UpdateCounter(4); break;
-        case GPIO_PIN_5: Hall_UpdateCounter(5); break;
-        case GPIO_PIN_6: Hall_UpdateCounter(6); break;
-        case GPIO_PIN_7: Hall_UpdateCounter(7); break;
+        case GPIO_PIN_2: Hall_UpdateCounter(0); break;
+        case GPIO_PIN_3: Hall_UpdateCounter(1); break;
+        case GPIO_PIN_4: Hall_UpdateCounter(2); break;
+        case GPIO_PIN_5: Hall_UpdateCounter(3); break;
+        case GPIO_PIN_6: Hall_UpdateCounter(4); break;
+        case GPIO_PIN_7: Hall_UpdateCounter(5); break;
+        case GPIO_PIN_8: Hall_UpdateCounter(6); break;
+        case GPIO_PIN_9: Hall_UpdateCounter(7); break;
     }
 }
 

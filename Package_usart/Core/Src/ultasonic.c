@@ -25,8 +25,8 @@ static volatile uint8_t  capture_done[NUM_SENSORS] = {0};
 static uint8_t polarity_state[NUM_SENSORS] = {0, 0, 0, 0}; // 0 = rising, 1 = falling
 
 // TRIG lábak GPIO portjai és pinek (statikusan)
-GPIO_TypeDef* trig_ports[NUM_SENSORS] = {GPIOA, GPIOE, GPIOE, GPIOE};
-uint16_t trig_pins[NUM_SENSORS]       = {GPIO_PIN_4, GPIO_PIN_10, GPIO_PIN_12, GPIO_PIN_15};
+GPIO_TypeDef* trig_ports[NUM_SENSORS] = {GPIOE, GPIOE, GPIOE, GPIOE};
+uint16_t trig_pins[NUM_SENSORS]       = {GPIO_PIN_14, GPIO_PIN_10, GPIO_PIN_12, GPIO_PIN_15};
 
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
@@ -111,7 +111,7 @@ float Ultrasonic_SingleMeasure(uint8_t index)
     uint32_t channel = tim_channels[index];
 
     capture_done[index] = 0;
-    __HAL_TIM_SET_CAPTUREPOLARITY(&htim5, channel, TIM_INPUTCHANNELPOLARITY_RISING);
+    __HAL_TIM_SET_CAPTUREPOLARITY(&htim8, channel, TIM_INPUTCHANNELPOLARITY_RISING);
 
     HAL_GPIO_WritePin(trig_ports[index], trig_pins[index], GPIO_PIN_RESET);
     HAL_Delay(1);

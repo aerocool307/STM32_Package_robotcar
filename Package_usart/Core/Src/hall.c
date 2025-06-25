@@ -31,7 +31,7 @@ void Hall_GPIO_Init(void)
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 	    __HAL_RCC_GPIOE_CLK_ENABLE();
-	    __HAL_RCC_GPIOG_CLK_ENABLE();
+	    __HAL_RCC_GPIOF_CLK_ENABLE();
 
 	    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
 	    GPIO_InitStruct.Pull = GPIO_PULLUP;

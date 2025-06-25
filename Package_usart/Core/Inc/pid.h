@@ -5,7 +5,7 @@
 #define INC_PID_H_
 
 // Globális PID példány minden motorhoz
-PIDController pid_m1, pid_m2, pid_m3, pid_m4;
+//PIDController pid_m1, pid_m2, pid_m3, pid_m4;
 
 // PID controller struktúra
 typedef struct {

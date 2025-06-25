@@ -63,46 +63,48 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOG_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOF, LORA_RESET_Pin|Motor_shield_Data_Pin|Motor_shield_Enable_Pin|Motor_shield_Clock_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, Sensor_Front_Trig_Pin|Motor_shield_Latch_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(Motor_shield_Latch_GPIO_Port, Motor_shield_Latch_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, LD1_Pin|LD3_Pin|LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, Sensor_Back_Trig_Pin|Sensor_Left_Trig_Pin|Sensor_Right_Trig_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOF, Motor_shield_Data_Pin|Motor_shield_Enable_Pin|Motor_shield_Clock_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOE, Sensor_Back_Trig_Pin|Sensor_Left_Trig_Pin|Sensor_Front_Trig_Pin|Sensor_Right_Trig_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOD, LoRa_RESET_Pin|SIM800H_PWRKY_Pin|SIM800H_RESET_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOG, SD_CARD_CS_Pin|USB_PowerSwitchOn_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, SIM800H_PWRKY_Pin|SIM800H_RESET_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pins : M2HALLA_Pin M2HALLB_Pin M3HALLA_Pin M3HALLB_Pin
-                           M4HALLA_Pin M4HALLB_Pin */
-  GPIO_InitStruct.Pin = M2HALLA_Pin|M2HALLB_Pin|M3HALLA_Pin|M3HALLB_Pin
-                          |M4HALLA_Pin|M4HALLB_Pin;
+  /*Configure GPIO pins : M1HALLA_Pin M1HALLB_Pin M2HALLA_Pin M2HALLB_Pin
+                           M3HALLA_Pin */
+  GPIO_InitStruct.Pin = M1HALLA_Pin|M1HALLB_Pin|M2HALLA_Pin|M2HALLB_Pin
+                          |M3HALLA_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : USER_Btn_Pin */
-  GPIO_InitStruct.Pin = USER_Btn_Pin;
+  /*Configure GPIO pins : USER_Btn_Pin NEO_M8N_PPS_Pin */
+  GPIO_InitStruct.Pin = USER_Btn_Pin|NEO_M8N_PPS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(USER_Btn_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LORA_RESET_Pin Motor_shield_Data_Pin Motor_shield_Enable_Pin Motor_shield_Clock_Pin */
-  GPIO_InitStruct.Pin = LORA_RESET_Pin|Motor_shield_Data_Pin|Motor_shield_Enable_Pin|Motor_shield_Clock_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  /*Configure GPIO pins : M3HALLB_Pin M4HALLA_Pin M4HALLB_Pin */
+  GPIO_InitStruct.Pin = M3HALLB_Pin|M4HALLA_Pin|M4HALLB_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
   /*Configure GPIO pins : RMII_MDC_Pin RMII_RXD0_Pin RMII_RXD1_Pin */
@@ -113,12 +115,19 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Sensor_Front_Trig_Pin Motor_shield_Latch_Pin */
-  GPIO_InitStruct.Pin = Sensor_Front_Trig_Pin|Motor_shield_Latch_Pin;
+  /*Configure GPIO pin : SPI1_CS_Pin */
+  GPIO_InitStruct.Pin = SPI1_CS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(SPI1_CS_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : Motor_shield_Latch_Pin */
+  GPIO_InitStruct.Pin = Motor_shield_Latch_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(Motor_shield_Latch_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LD1_Pin LD3_Pin LD2_Pin */
   GPIO_InitStruct.Pin = LD1_Pin|LD3_Pin|LD2_Pin;
@@ -127,14 +136,15 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : M1HALLA_Pin M1HALLB_Pin */
-  GPIO_InitStruct.Pin = M1HALLA_Pin|M1HALLB_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  /*Configure GPIO pins : Motor_shield_Data_Pin Motor_shield_Enable_Pin Motor_shield_Clock_Pin */
+  GPIO_InitStruct.Pin = Motor_shield_Data_Pin|Motor_shield_Enable_Pin|Motor_shield_Clock_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Sensor_Back_Trig_Pin Sensor_Left_Trig_Pin Sensor_Right_Trig_Pin */
-  GPIO_InitStruct.Pin = Sensor_Back_Trig_Pin|Sensor_Left_Trig_Pin|Sensor_Right_Trig_Pin;
+  /*Configure GPIO pins : Sensor_Back_Trig_Pin Sensor_Left_Trig_Pin Sensor_Front_Trig_Pin Sensor_Right_Trig_Pin */
+  GPIO_InitStruct.Pin = Sensor_Back_Trig_Pin|Sensor_Left_Trig_Pin|Sensor_Front_Trig_Pin|Sensor_Right_Trig_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -147,6 +157,13 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
   HAL_GPIO_Init(RMII_TXD1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : LoRa_RESET_Pin SIM800H_PWRKY_Pin SIM800H_RESET_Pin */
+  GPIO_InitStruct.Pin = LoRa_RESET_Pin|SIM800H_PWRKY_Pin|SIM800H_RESET_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /*Configure GPIO pins : SD_CARD_CS_Pin USB_PowerSwitchOn_Pin */
   GPIO_InitStruct.Pin = SD_CARD_CS_Pin|USB_PowerSwitchOn_Pin;
@@ -175,13 +192,6 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(USB_VBUS_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SIM800H_PWRKY_Pin SIM800H_RESET_Pin */
-  GPIO_InitStruct.Pin = SIM800H_PWRKY_Pin|SIM800H_RESET_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-
   /*Configure GPIO pins : RMII_TX_EN_Pin RMII_TXD0_Pin */
   GPIO_InitStruct.Pin = RMII_TX_EN_Pin|RMII_TXD0_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -197,6 +207,19 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 }
 

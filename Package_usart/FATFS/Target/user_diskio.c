@@ -35,10 +35,11 @@
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
 #include "ff_gen_drv.h"
+#include "user_diskio_spi.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#include "fatfs_sd.h"
+
 /* Private variables ---------------------------------------------------------*/
 /* Disk status */
 static volatile DSTATUS Stat = STA_NOINIT;
@@ -81,12 +82,7 @@ DSTATUS USER_initialize (
 )
 {
   /* USER CODE BEGIN INIT */
-	if (pdrv != 0) return STA_NOINIT;
-
-	    SD_Deselect();
-	    for (uint8_t i = 0; i < 10; i++) SD_SPI_TxRx(0xFF); // Clock sync
-	    Stat = 0;
-    return Stat;
+    return USER_SPI_initialize(pdrv);
   /* USER CODE END INIT */
 }
 
@@ -100,8 +96,7 @@ DSTATUS USER_status (
 )
 {
   /* USER CODE BEGIN STATUS */
-	if (pdrv != 0) return STA_NOINIT;
-    return Stat;
+	return USER_SPI_status (pdrv);
   /* USER CODE END STATUS */
 }
 
@@ -121,14 +116,7 @@ DRESULT USER_read (
 )
 {
   /* USER CODE BEGIN READ */
-	if (pdrv != 0 || !count) return RES_PARERR;
-	for (UINT i = 0; i < count; i++) {
-	        if (!SD_ReadSingleBlock(buff + 512 * i, sector + i)) {
-	            return RES_ERROR;
-	        }
-	    }
-
-	    return RES_OK;
+	return USER_SPI_read (pdrv, buff, sector, count);
   /* USER CODE END READ */
 }
 
@@ -150,14 +138,7 @@ DRESULT USER_write (
 {
   /* USER CODE BEGIN WRITE */
   /* USER CODE HERE */
-	if (pdrv != 0 || !count) return RES_PARERR;
-	for (UINT i = 0; i < count; i++) {
-	        if (!SD_WriteSingleBlock(buff + 512 * i, sector + i)) {
-	            return RES_ERROR;
-	        }
-	    }
-
-	    return RES_OK;
+	return USER_SPI_write (pdrv, buff, sector, count);
   /* USER CODE END WRITE */
 }
 #endif /* _USE_WRITE == 1 */
@@ -177,23 +158,7 @@ DRESULT USER_ioctl (
 )
 {
   /* USER CODE BEGIN IOCTL */
-	if (pdrv != 0) return RES_PARERR;
-
-	    switch (cmd) {
-	        case CTRL_SYNC:
-	            return RES_OK;
-	        case GET_SECTOR_SIZE:
-	            *(WORD *)buff = 512;
-	            return RES_OK;
-	        case GET_BLOCK_SIZE:
-	            *(DWORD *)buff = 8;
-	            return RES_OK;
-	        case GET_SECTOR_COUNT:
-	            *(DWORD *)buff = 4096;
-	            return RES_OK;
-	    }
-
-	    return RES_PARERR;
+	return USER_SPI_ioctl (pdrv, cmd, buff);
   /* USER CODE END IOCTL */
 }
 #endif /* _USE_IOCTL == 1 */

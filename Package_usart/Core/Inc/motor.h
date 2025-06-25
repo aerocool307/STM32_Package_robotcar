@@ -66,7 +66,6 @@ void Motor_output(uint8_t output);
 void Motor_Set(MotorID motor, MotorDirection command, uint16_t speed);
 void Motor_SetSpeed(uint8_t motor_index, uint16_t speed);
 void MotorControl_HandleInput(uint8_t byte);
-void MotorControl_HandleBluetooth(uint8_t byte);  // PID vezérléshez
 
 
 

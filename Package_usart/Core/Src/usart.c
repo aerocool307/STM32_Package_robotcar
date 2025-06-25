@@ -197,7 +197,7 @@ void MX_USART6_UART_Init(void)
 
   /* USER CODE END USART6_Init 1 */
   huart6.Instance = USART6;
-  huart6.Init.BaudRate = 115200;
+  huart6.Init.BaudRate = 9600;
   huart6.Init.WordLength = UART_WORDLENGTH_8B;
   huart6.Init.StopBits = UART_STOPBITS_1;
   huart6.Init.Parity = UART_PARITY_NONE;
@@ -284,17 +284,17 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     /* UART7 clock enable */
     __HAL_RCC_UART7_CLK_ENABLE();
 
-    __HAL_RCC_GPIOF_CLK_ENABLE();
+    __HAL_RCC_GPIOE_CLK_ENABLE();
     /**UART7 GPIO Configuration
-    PF6     ------> UART7_RX
-    PF7     ------> UART7_TX
+    PE7     ------> UART7_RX
+    PE8     ------> UART7_TX
     */
     GPIO_InitStruct.Pin = LORA_RX_Pin|LORA_TX_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF8_UART7;
-    HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+    HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
     /* UART7 interrupt Init */
     HAL_NVIC_SetPriority(UART7_IRQn, 0, 0);
@@ -341,6 +341,9 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
     HAL_GPIO_Init(T_CAMERA_TX_GPIO_Port, &GPIO_InitStruct);
 
+    /* USART1 interrupt Init */
+    HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART1_IRQn);
   /* USER CODE BEGIN USART1_MspInit 1 */
 
   /* USER CODE END USART1_MspInit 1 */
@@ -449,6 +452,9 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     GPIO_InitStruct.Alternate = GPIO_AF8_USART6;
     HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
+    /* USART6 interrupt Init */
+    HAL_NVIC_SetPriority(USART6_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART6_IRQn);
   /* USER CODE BEGIN USART6_MspInit 1 */
 
   /* USER CODE END USART6_MspInit 1 */
@@ -489,10 +495,10 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
     __HAL_RCC_UART7_CLK_DISABLE();
 
     /**UART7 GPIO Configuration
-    PF6     ------> UART7_RX
-    PF7     ------> UART7_TX
+    PE7     ------> UART7_RX
+    PE8     ------> UART7_TX
     */
-    HAL_GPIO_DeInit(GPIOF, LORA_RX_Pin|LORA_TX_Pin);
+    HAL_GPIO_DeInit(GPIOE, LORA_RX_Pin|LORA_TX_Pin);
 
     /* UART7 interrupt Deinit */
     HAL_NVIC_DisableIRQ(UART7_IRQn);
@@ -516,6 +522,8 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 
     HAL_GPIO_DeInit(T_CAMERA_TX_GPIO_Port, T_CAMERA_TX_Pin);
 
+    /* USART1 interrupt Deinit */
+    HAL_NVIC_DisableIRQ(USART1_IRQn);
   /* USER CODE BEGIN USART1_MspDeInit 1 */
 
   /* USER CODE END USART1_MspDeInit 1 */
@@ -574,6 +582,8 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
     */
     HAL_GPIO_DeInit(GPIOG, D0_RX_Pin|D1_TX_Pin);
 
+    /* USART6 interrupt Deinit */
+    HAL_NVIC_DisableIRQ(USART6_IRQn);
   /* USER CODE BEGIN USART6_MspDeInit 1 */
 
   /* USER CODE END USART6_MspDeInit 1 */
