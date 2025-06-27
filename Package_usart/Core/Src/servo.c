@@ -5,9 +5,10 @@
 
 #include "ultrasonic.h"
 #include "main.h"
+#include "tim.h"
 #include "servo.h"
 
-
+extern TIM_HandleTypeDef htim4;
 
 void Servo_Init(void)
 {

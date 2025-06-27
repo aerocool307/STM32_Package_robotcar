@@ -79,7 +79,7 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOF, Motor_shield_Data_Pin|Motor_shield_Enable_Pin|Motor_shield_Clock_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, Sensor_Back_Trig_Pin|Sensor_Left_Trig_Pin|Sensor_Front_Trig_Pin|Sensor_Right_Trig_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, Sensor_Back_Trig_Pin|Sensor_Left_Trig_Pin|Sensor_Front_Trig_Pin|Sensor_Right_Trig_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, LoRa_RESET_Pin|SIM800H_PWRKY_Pin|SIM800H_RESET_Pin, GPIO_PIN_RESET);
@@ -220,6 +220,9 @@ void MX_GPIO_Init(void)
 
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
 

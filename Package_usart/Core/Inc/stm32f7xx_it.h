@@ -66,6 +66,7 @@ void SPI1_IRQHandler(void);
 void USART1_IRQHandler(void);
 void USART2_IRQHandler(void);
 void USART3_IRQHandler(void);
+void EXTI15_10_IRQHandler(void);
 void TIM8_CC_IRQHandler(void);
 void UART5_IRQHandler(void);
 void USART6_IRQHandler(void);

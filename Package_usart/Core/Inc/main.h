@@ -74,6 +74,7 @@ void Error_Handler(void);
 #define M3HALLA_EXTI_IRQn EXTI9_5_IRQn
 #define USER_Btn_Pin GPIO_PIN_13
 #define USER_Btn_GPIO_Port GPIOC
+#define USER_Btn_EXTI_IRQn EXTI15_10_IRQn
 #define M3HALLB_Pin GPIO_PIN_7
 #define M3HALLB_GPIO_Port GPIOF
 #define M3HALLB_EXTI_IRQn EXTI9_5_IRQn
@@ -167,6 +168,7 @@ void Error_Handler(void);
 #define TCK_GPIO_Port GPIOA
 #define NEO_M8N_PPS_Pin GPIO_PIN_11
 #define NEO_M8N_PPS_GPIO_Port GPIOC
+#define NEO_M8N_PPS_EXTI_IRQn EXTI15_10_IRQn
 #define NEO_M8N_TX_Pin GPIO_PIN_12
 #define NEO_M8N_TX_GPIO_Port GPIOC
 #define NEO_M8N_RX_Pin GPIO_PIN_2
