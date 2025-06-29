@@ -1,16 +1,21 @@
-/*
- * servo.h
- *
- *  Created on: Jun 18, 2025
- *      Author: Qwerty
- */
+
+/* servo.h */
+
 
 #ifndef INC_SERVO_H_
 #define INC_SERVO_H_
+#include "stm32f7xx_hal.h"
 
-extern TIM_HandleTypeDef htim4; // ha pl. a PD14 (TIM4_CH3) lábon van a szervo
+typedef struct {
+    TIM_HandleTypeDef *htim;
+    uint32_t channel;
+} SERVO_Handle_t;
 
-void Servo_Init(void);
-void Servo_SetAngle(uint8_t angle);
+// Globálisan használt példány (pl. front szervó)
+extern SERVO_Handle_t front_servo;
+
+void Servo_Init(void);  // AppInit-féle függvény servo.c-ben
+void Servo_SetAngle(SERVO_Handle_t *servo, int8_t angle);
 
 #endif /* INC_SERVO_H_ */
+

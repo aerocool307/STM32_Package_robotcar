@@ -7,8 +7,8 @@
 #include "stm32f7xx_hal.h"
 
 //FRONT SERVO
-#define US1_SERVO_GPIO GPIOD
-#define US1_SERVO_PIN  GPIO_PIN_14
+//#define US1_SERVO_GPIO GPIOD
+//#define US1_SERVO_PIN  GPIO_PIN_14
 /*
 //Front
 #define US1_TRIG_GPIO GPIOE

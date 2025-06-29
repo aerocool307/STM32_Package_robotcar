@@ -7,6 +7,7 @@
 #include <stdio.h> // sprintf-hez
 #include <string.h>
 
+
 extern TIM_HandleTypeDef htim8;
 extern UART_HandleTypeDef huart3;
 
@@ -33,6 +34,10 @@ uint16_t trig_pins[NUM_SENSORS]       = {GPIO_PIN_14, GPIO_PIN_10, GPIO_PIN_12, 
 // ECHO lábak GPIO portjai és pinek (statikusan)
 GPIO_TypeDef* echo_ports[NUM_SENSORS] = {GPIOC, GPIOC, GPIOC, GPIOC};
 uint16_t echo_pins[NUM_SENSORS]       = {GPIO_PIN_6, GPIO_PIN_7, GPIO_PIN_8, GPIO_PIN_9};
+
+
+
+
 
 
 
@@ -88,29 +93,37 @@ void Ultrasonic_Init(void)
     HAL_TIM_IC_Start_IT(&htim8, TIM_CHANNEL_4);
 
 }
+float Ultrasonic_FrontAverageFine(void)
+{
+    float total = 0.0f;
+    int count = 0;
+
+    for (int8_t angle = -20; angle <= 20; angle +=20)
+    {
+        Servo_SetAngle(&front_servo, angle);
+        HAL_Delay(20);  // Idő a szervónak beállni
+
+        float dist = Ultrasonic_SingleMeasure(0);
+        total += dist;
+        count++;
+    }
+
+    return (count > 0) ? (total / count) : 0.0f;
+}
 
 float Ultrasonic_ReadDistance(uint8_t index)
 {
 	if (index > 3) return -1;
 
 	    if (index == 0) {
-	    	myprintf("Servo -> Left\n");
-	        // Front szenzor – mozdítsuk el jobbra, balra, majd előre
-	        float dist_left, dist_center, dist_right;
 
-	        Servo_SetAngle(30);
-	        dist_left = Ultrasonic_SingleMeasure(index);
+	    	float avg = Ultrasonic_FrontAverageFine();
+	    	//myprintf("Átlagolt front távolság (-90°..90°): %.2f cm\r\n", avg);
 
-	        Servo_SetAngle(90);
-	        dist_center = Ultrasonic_SingleMeasure(index);
-
-	        Servo_SetAngle(150);
-	        dist_right = Ultrasonic_SingleMeasure(index);
-
-	        Servo_SetAngle(90); // Vissza alapállásba
+	        Servo_SetAngle(&front_servo, 0); // Vissza alapállásba
 
 	        // Válasszuk ki a legkisebb távolságot, vagy átlagolhatunk is
-	        return (dist_left + dist_center + dist_right) / 3.0f;
+	        return avg;
 	    } else {
 
 	        return Ultrasonic_SingleMeasure(index);
@@ -148,6 +161,7 @@ void Ultrasonic_SendDistanceUART(uint8_t index)
 
     float distance = Ultrasonic_ReadDistance(index);
     //HAL_UART_Transmit(&huart3, (uint8_t*)distance, 20, HAL_MAX_DELAY);
+
     char msg[64];
 
     if (distance < 0) {
@@ -157,9 +171,5 @@ void Ultrasonic_SendDistanceUART(uint8_t index)
     }
 
     HAL_UART_Transmit(&huart3, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
-    //char msg[64];
-    float value = 12.345f;
 
-    sprintf(msg, "Float ertek: %.2f\r\n", value);
-    HAL_UART_Transmit(&huart3, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 }

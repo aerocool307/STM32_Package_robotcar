@@ -101,6 +101,11 @@
 			<locationURI>PARENT-3-PROJECT_LOC/STM32Cube/Repository/STM32Cube_FW_F7_V1.17.3/Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_rcc_ex.c</locationURI>
 		</link>
 		<link>
+			<name>Drivers/STM32F7xx_HAL_Driver/stm32f7xx_hal_rng.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/STM32Cube/Repository/STM32Cube_FW_F7_V1.17.3/Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_rng.c</locationURI>
+		</link>
+		<link>
 			<name>Drivers/STM32F7xx_HAL_Driver/stm32f7xx_hal_spi.c</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/STM32Cube/Repository/STM32Cube_FW_F7_V1.17.3/Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_spi.c</locationURI>
