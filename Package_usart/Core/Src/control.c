@@ -6,16 +6,13 @@
 #include "motor.h"
 #include "hall.h"
 #include "pid.h"
+#include "obstacle.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
-#define MOTOR_COUNT 4
-
-static PIDController pid[MOTOR_COUNT];
-static float target_rpm[MOTOR_COUNT];
-
-extern void myprintf(const char *fmt, ...);
-
+float target_rpm[MOTOR_COUNT];
+extern PIDController pid[MOTOR_COUNT];
 
 void Control_Init(void)
 {
@@ -57,65 +54,62 @@ void Control_Update(void)
 
 }
 
-
-
-// Bluetooth input handler (pl. UART2-ből hívod meg)
-void MotorControl_HandleBluetooth(uint8_t byte)
+void Control_ParseCommand(const char* msg)
 {
-    static char bt_cmd[64];
-    static uint8_t idx = 0;
 
-    if (byte == '\n' || byte == '\r') {
-        bt_cmd[idx] = '\0';
+    float val = 0.0f;
+    int spd = 0;
 
-        float val = 0.0f;
-        int spd = 0;
+    if (sscanf(msg, "kp %f", &val) == 1) {
+        pid[0].Kp = val;
+        myprintf("PID Kp beallitva: %.2f\r\n", val);
 
-        if (sscanf(bt_cmd, "kp %f", &val) == 1) { // @suppress("Float formatting support")
-            pid[0].Kp = val;  // pl. motor 1 hangolása
-        }else if (sscanf(bt_cmd, "m1 %d", &spd) == 1) {// példa: "m1 100" → célsebesség motor1-en 100 RPM
-            Control_SetTargetSpeed(0, spd);
-        } else if (sscanf(bt_cmd, "m2 %d", &spd) == 1) {
-            Control_SetTargetSpeed(1, spd);
-        } else if (sscanf(bt_cmd, "m3 %d", &spd) == 1) {
-            Control_SetTargetSpeed(2, spd);
-        } else if (sscanf(bt_cmd, "m4 %d", &spd) == 1) {
-            Control_SetTargetSpeed(3, spd);
-        }else if (sscanf(bt_cmd, "all %d", &spd) == 1) {
-        	for (uint8_t i = 0; i < MOTOR_COUNT; i++) {
-        		Control_SetTargetSpeed(i, (float)spd);
-        	}
-        }else if (strcmp(bt_cmd, "status") == 0) {
-            for (int i = 0; i < MOTOR_COUNT; i++) {
-                float actual = Get_Hall_Speed(i);
-                float pwm = PID_Compute(&pid[i], target_rpm[i], actual, 0.1f);  // vagy csak olvasd a PID kimenetet, ha tárolod
+    } else if (sscanf(msg, "m1 %d", &spd) == 1) {
+        Control_SetTargetSpeed(0, spd);
+        myprintf("Speed beallitva Motor_1: %d\r\n", spd);
 
-                myprintf("M%d | Target: %.2f RPM | Actual: %.2f RPM | PWM: %.2f\r\n",
-                         i + 1, target_rpm[i], actual, pwm);
-            }
+    } else if (sscanf(msg, "m2 %d", &spd) == 1) {
+        Control_SetTargetSpeed(1, spd);
+        myprintf("Speed beallitva Motor_2: %d\r\n", spd);
+
+    } else if (sscanf(msg, "m3 %d", &spd) == 1) {
+        Control_SetTargetSpeed(2, spd);
+        myprintf("Speed beallitva Motor_3: %d\r\n", spd);
+
+    } else if (sscanf(msg, "m4 %d", &spd) == 1) {
+        Control_SetTargetSpeed(3, spd);
+        myprintf("Speed beallitva Motor_4: %d\r\n", spd);
+
+    } else if (sscanf(msg, "all %d", &spd) == 1) {
+        for (uint8_t i = 0; i < MOTOR_COUNT; i++) {
+            Control_SetTargetSpeed(i, (float)spd);
+        }
+        myprintf("All Motor Speed beallitva: %d\r\n", spd);
+    } else if (strcmp(msg, "start") == 0) {
+        myprintf("[CMD] START parancs\r\n");
+        for (int i = 0; i < MOTOR_COUNT; i++) {
+            Control_SetTargetSpeed(i, 150);  // pl. 150 RPM célérték
+            myprintf("Motor %d: indul \r\n", i+1);
         }
 
-        idx = 0;
-       } else if (idx < sizeof(bt_cmd) - 1) {
-            bt_cmd[idx++] = byte;
-            }
+    } else if (strcmp(msg, "stop") == 0) {
+        myprintf("[CMD] STOP parancs\r\n");
+        for (int i = 0; i < MOTOR_COUNT; i++) {
+            Control_SetTargetSpeed(i, 0);
+            Motor_Set(i + 1, STOP, 0);
+            myprintf("Motor %d: leallitva\r\n", i+1);
+        }
+
+    } else if (strcmp(msg, "status") == 0) {
+        for (uint8_t i = 0; i < MOTOR_COUNT; i++) {
+            float actual = Get_Hall_Speed(i);
+            float pwm = PID_Compute(&pid[i], target_rpm[i], actual, 0.1f);
+            myprintf("M%d | Target: %.2f RPM | Actual: %.2f RPM | PWM: %.2f\r\n",
+                     i + 1, target_rpm[i], actual, pwm);
+        }
+        myprintf("[CMD] STATUS: robot mukodik, tavolsag = %.2f cm\r\n", Obstacle_GetFrontDistance());
+    } else {
+        myprintf("Ismeretlen parancs: %s\r\n", msg);
+    }
 
 }
-
-/*
-void App_Init()
-{
-    PID_Init(&pid_m1, 1.0f, 0.1f, 0.05f, 0, 100);
-    PID_Init(&pid_m2, 1.0f, 0.1f, 0.05f, 0, 100);
-    PID_Init(&pid_m3, 1.0f, 0.1f, 0.05f, 0, 100);
-    PID_Init(&pid_m4, 1.0f, 0.1f, 0.05f, 0, 100);
-}
-*/
-/*
-void App_Update(float dt)
-{
-    float actual = Get_Hall_Speed(0);
-    float pwm = PID_Compute(&pid_m1, pid_target_rpm, actual, dt);
-    Motor_SetSpeed(1, (uint16_t)pwm);
-}
-*/

@@ -2,7 +2,11 @@
 /* pid.c */
 
 #include "pid.h"
+#include "control.h"
+#include "hall.h"
+#include "motor.h"
 
+PIDController pid[MOTOR_COUNT];
 
 
 void PID_Init(PIDController* pid, float Kp, float Ki, float Kd, float min, float max)
@@ -33,3 +37,20 @@ float PID_Compute(PIDController* pid, float setpoint, float measurement, float d
     return pid->output;
 }
 
+void Motor_PID_Update(void)
+{
+
+    for (int i = 0; i < MOTOR_COUNT; i++)
+    {
+    	static uint32_t last_tick = 0;
+    	uint32_t now = HAL_GetTick();
+    	float dt = (now - last_tick) / 1000.0f;  // dt másodpercben
+    	if (dt < 0.001f) dt = 0.001f;  // minimális dt
+    	last_tick = now;
+
+        float measured_rpm = Get_Hall_Speed(i);
+        float output = PID_Compute(&pid[i], target_rpm[i], measured_rpm, dt);
+
+        Motor_SetPWM(i, output);
+    }
+}

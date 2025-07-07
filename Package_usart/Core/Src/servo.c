@@ -5,10 +5,10 @@
 #include "servo.h"
 #include "tim.h"  // TIM4 például itt definiált
 #include "main.h"
-#include <stdio.h>  // ha kell
+
 #include "usart.h"  // ha myprintf uart-on küld
 
-extern void myprintf(const char *fmt, ...);  // ha nem lenne deklarálva máshol
+
 SERVO_Handle_t front_servo;
 // Inicializálás: csak elmenti a paramétereket, PWM nem indul
 void Servo_Init(void)
@@ -35,7 +35,7 @@ void Servo_SetAngle(SERVO_Handle_t *servo, int8_t angle)
     HAL_Delay(400);  // pozíció elérésére idő
     HAL_TIM_PWM_Stop(servo->htim, servo->channel); // PWM leállítása
     HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_RESET);
-    myprintf("Angle: %d°, PWM Pulse Width: %u us\r\n", angle, pulse_width_us);
+
 }
 
 

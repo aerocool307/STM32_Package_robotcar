@@ -36,11 +36,6 @@ GPIO_TypeDef* echo_ports[NUM_SENSORS] = {GPIOC, GPIOC, GPIOC, GPIOC};
 uint16_t echo_pins[NUM_SENSORS]       = {GPIO_PIN_6, GPIO_PIN_7, GPIO_PIN_8, GPIO_PIN_9};
 
 
-
-
-
-
-
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
 
@@ -100,7 +95,7 @@ float Ultrasonic_FrontAverageFine(void)
 
     for (int8_t angle = -20; angle <= 20; angle +=20)
     {
-        Servo_SetAngle(&front_servo, angle);
+        //Servo_SetAngle(&front_servo, angle);
         HAL_Delay(20);  // Idő a szervónak beállni
 
         float dist = Ultrasonic_SingleMeasure(0);

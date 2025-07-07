@@ -6,16 +6,6 @@
 #include <string.h>
 #include <stdio.h>
 
-extern UART_HandleTypeDef huart3;
-
-uint8_t hall_values[HALL_COUNT];
-char uart_buffer[64];
-
-// minden motorhoz külön számláló és időbélyeg
-volatile uint32_t hall_pulse_count[MOTOR_COUNT] = {0};
-uint32_t last_pulse_count[MOTOR_COUNT] = {0};
-uint32_t last_time_ms[MOTOR_COUNT] = {0};
-
 GPIO_TypeDef* HALL_GPIO_PORTS[HALL_COUNT] = {
     HALL_GPIO_PORT_0, HALL_GPIO_PORT_1, HALL_GPIO_PORT_2, HALL_GPIO_PORT_3,
     HALL_GPIO_PORT_4, HALL_GPIO_PORT_5, HALL_GPIO_PORT_6, HALL_GPIO_PORT_7
@@ -25,6 +15,18 @@ uint16_t HALL_PINS[HALL_COUNT] = {
     HALL_GPIO_PIN_0, HALL_GPIO_PIN_1, HALL_GPIO_PIN_2, HALL_GPIO_PIN_3,
     HALL_GPIO_PIN_4, HALL_GPIO_PIN_5, HALL_GPIO_PIN_6, HALL_GPIO_PIN_7
 };
+
+extern UART_HandleTypeDef huart3;
+
+
+uint8_t hall_values[HALL_COUNT];
+char uart_buffer[64];
+
+// minden motorhoz külön számláló és időbélyeg
+volatile uint32_t hall_pulse_count[MOTOR_COUNT] = {0};
+uint32_t last_pulse_count[MOTOR_COUNT] = {0};
+uint32_t last_time_ms[MOTOR_COUNT] = {0};
+
 
 void Hall_GPIO_Init(void)
 {

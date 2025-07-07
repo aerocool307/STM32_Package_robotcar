@@ -21,7 +21,63 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
+#include "control.h"
+#include <string.h>
+#include <stdio.h>
+#define END_CHAR_1 '\n'
+#define END_CHAR_2 '\r'
 
+#define HANDLE_UART_RX(UART_HANDLE, RX_CHAR, BUFFER, INDEX, READY_FLAG)  \
+    do {                                                                 \
+        if ((RX_CHAR) != END_CHAR_1 && (RX_CHAR) != END_CHAR_2) {        \
+            if ((INDEX) < sizeof((BUFFER)) - 1) {                        \
+                (BUFFER)[(INDEX)++] = (RX_CHAR);                         \
+            }                                                            \
+        } else {                                                         \
+            (BUFFER)[(INDEX)] = '\0';                                    \
+            (INDEX) = 0;                                                 \
+            (READY_FLAG) = 1;                                            \
+        }                                                                \
+        HAL_UART_Receive_IT(&(UART_HANDLE), &(RX_CHAR), 1);              \
+    } while(0)
+
+extern void myprintf(const char *fmt, ...);
+/* --- UART fogadó bufferek --- */
+// USART1 – T-Camera
+uint8_t uart1_rx_char;
+char uart1_rx_buffer[UART_BUFFER_SIZE];
+uint8_t uart1_rx_index = 0;
+volatile uint8_t uart1_rx_ready = 0;
+
+// USART2 – SIM800H
+uint8_t uart2_rx_char;
+char uart2_rx_buffer[UART_BUFFER_SIZE];
+uint8_t uart2_rx_index = 0;
+volatile uint8_t uart2_rx_ready = 0;
+
+// USART3 – PC log
+uint8_t uart3_rx_char;
+char uart3_rx_buffer[UART_BUFFER_SIZE];
+uint8_t uart3_rx_index = 0;
+volatile uint8_t uart3_rx_ready = 0;
+
+// UART5 – NEO-M8N
+uint8_t uart5_rx_char;
+char uart5_rx_buffer[UART_BUFFER_SIZE];
+uint8_t uart5_rx_index = 0;
+volatile uint8_t uart5_rx_ready = 0;
+
+// USART6 – MotorShield
+uint8_t uart6_rx_char;
+char uart6_rx_buffer[UART_BUFFER_SIZE];
+uint8_t uart6_rx_index = 0;
+volatile uint8_t uart6_rx_ready = 0;
+
+// UART7 – LoRa
+uint8_t uart7_rx_char;
+char uart7_rx_buffer[UART_BUFFER_SIZE];
+uint8_t uart7_rx_index = 0;
+volatile uint8_t uart7_rx_ready = 0;
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart5;
@@ -592,4 +648,64 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 
 /* USER CODE BEGIN 1 */
 
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+
+    if (huart->Instance == USART1) {
+        HANDLE_UART_RX(huart1, uart1_rx_char, uart1_rx_buffer, uart1_rx_index, uart1_rx_ready);
+    }
+    else if (huart->Instance == USART2) {
+        HANDLE_UART_RX(huart2, uart2_rx_char, uart2_rx_buffer, uart2_rx_index, uart2_rx_ready);
+    }
+    else if (huart->Instance == USART3) {
+    	HANDLE_UART_RX(huart3, uart3_rx_char, uart3_rx_buffer, uart3_rx_index, uart3_rx_ready);
+    }
+    else if (huart->Instance == UART5) {
+        HANDLE_UART_RX(huart5, uart5_rx_char, uart5_rx_buffer, uart5_rx_index, uart5_rx_ready);
+    }
+    else if (huart->Instance == USART6) {
+        HANDLE_UART_RX(huart6, uart6_rx_char, uart6_rx_buffer, uart6_rx_index, uart6_rx_ready);
+    }
+    else if (huart->Instance == UART7) {
+    	HANDLE_UART_RX(huart7, uart7_rx_char, uart7_rx_buffer, uart7_rx_index, uart7_rx_ready);
+    }
+
+}
+
+void UartDispatcher_Process(void)
+{
+    if (uart1_rx_ready) {
+        myprintf("[UART1 – T-Camera] %s\r\n", uart1_rx_buffer);
+        uart1_rx_ready = 0;
+    }
+
+    if (uart2_rx_ready) {
+        myprintf("[UART2 – SIM800H] %s\r\n", uart2_rx_buffer);
+        uart2_rx_ready = 0;
+    }
+
+    if (uart3_rx_ready) {
+        myprintf("[UART3 – PC] %s\r\n", uart3_rx_buffer);
+        for (uint16_t i = 0; i < strlen((char *)uart3_rx_buffer); i++) {
+                MotorControl_HandleInput(uart3_rx_buffer[i]);
+            }
+        uart3_rx_ready = 0;
+    }
+
+    if (uart5_rx_ready) {
+        myprintf("[UART5 – GPS] %s\r\n", uart5_rx_buffer);
+        uart5_rx_ready = 0;
+    }
+
+    if (uart6_rx_ready) {
+        myprintf("[UART6 – MotorShield] %s\r\n", uart6_rx_buffer);
+        uart6_rx_ready = 0;
+    }
+
+    if (uart7_rx_ready) {
+        myprintf("[UART7 – LoRa/BLE] %s\r\n", uart7_rx_buffer);
+        Control_ParseCommand(uart7_rx_buffer);
+        uart7_rx_ready = 0;
+    }
+}
 /* USER CODE END 1 */

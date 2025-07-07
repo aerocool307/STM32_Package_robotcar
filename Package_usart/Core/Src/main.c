@@ -33,6 +33,8 @@
 #include "servo.h"
 #include "user_diskio_spi.h"
 #include "sd_card.h"
+#include "obstacle.h"
+#include "uart_handler.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h> //for va_list var arg functions
@@ -56,16 +58,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-//SPI_HandleTypeDef hspi1;
-//UART_HandleTypeDef huart3;
 
-/* --- UART fogadó bufferek --- */
-#define RX_BUFFER_SIZE 64
-uint8_t rx_char;
-char uart_rx_buffer[RX_BUFFER_SIZE];
-uint8_t rx_index = 0;
-volatile uint8_t uart_rx_ready = 0;
-uint8_t bluetooth_rx_byte;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -73,7 +67,7 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 void Green_led_blink(void);
 void Hall_GPIO_Init(void);
-
+void LoRa_Reset(void);
 void myprintf(const char *fmt, ...);
 
 /* USER CODE END PFP */
@@ -139,20 +133,26 @@ int main(void)
   MX_SPI1_Init();
   MX_RNG_Init();
   /* USER CODE BEGIN 2 */
+  //Uart start
+    HAL_UART_Receive_IT(&huart1, &uart1_rx_char, 1);
+    HAL_UART_Receive_IT(&huart2, &uart2_rx_char, 1);
+    HAL_UART_Receive_IT(&huart3, &uart3_rx_char, 1);// UART3 fogadás (PC/parancs)
+    HAL_UART_Receive_IT(&huart6, &uart6_rx_char, 1);
+    HAL_UART_Receive_IT(&huart5, &uart5_rx_char, 1);
+    HAL_UART_Receive_IT(&huart7, &uart7_rx_char, 1);// UART7 fogadás (Bluetooth)
+
+        char welcome[] = "USART3 ready. Type a command:\r\n";
+        HAL_UART_Transmit(&huart3, (uint8_t*)welcome, strlen(welcome), HAL_MAX_DELAY);
   /* SD CARD USED BEGIN ---------------------------------------------------------------------------------------------------------------*/
   SD_Card_Init();
   SD_Card_ReadTestFile();
   SD_Card_WriteTestFile();
 
   /* SD CARD USED END -----------------------------------------------------------------------------------------------------------------*/
-
+  LoRa_Reset();
   Servo_Init(); // A PWM indítása
   Ultrasonic_Init(); // Az IC bemenetek indítása
 
-  HAL_UART_Receive_IT(&huart3, &rx_char, 1);  // UART RX IT indítása
-
-      char welcome[] = "USART3 ready. Type a command:\r\n";
-      HAL_UART_Transmit(&huart3, (uint8_t*)welcome, strlen(welcome), HAL_MAX_DELAY);
 
   Motor_Init();
 
@@ -165,49 +165,25 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  UartDispatcher_Process();
+	  //HAL_UART_Receive_IT(&huart7, &uart7_rx_char, 1);// UART7 fogadás (Bluetooth)
 	  Green_led_blink();
-	  //hall szenzorok
-	 // Hall_read_usart3();
+
+	  Hall_DebugPrint(); //hall szenzorok
 
 	  Ultrasonic_SendDistanceUART(0); // Front szenzor
 	  Ultrasonic_SendDistanceUART(1); // Hátsó
 	  Ultrasonic_SendDistanceUART(2); // Bal
 	  Ultrasonic_SendDistanceUART(3); // Jobb
-
-	  Control_Update();
-	  HAL_Delay(100);  // vagy a kívánt ciklusidő
-
-
-	  HAL_UART_Receive_IT(&huart3, &rx_char, 1);         // UART3 fogadás (PC/parancs)
-	  HAL_UART_Receive_IT(&huart2, &bluetooth_rx_byte, 1); // UART2 fogadás (Bluetooth)
-
-	  //com-port message
-	      /*
-	  if (uart_rx_ready)
-	          {
-	              uart_rx_ready = 0;
-
-	              // Feldolgozás: enter utáni parancs
-	              if (strcmp(uart_rx_buffer, "hello") == 0)
-	              {
-	                  HAL_UART_Transmit(&huart3, (uint8_t*)"Hello to you too!\r\n", 20, HAL_MAX_DELAY);
-	              }
-	              else if (strcmp(uart_rx_buffer, "start") == 0)
-	              {
-	                  HAL_UART_Transmit(&huart3, (uint8_t*)"Start parancs elfogadva.\r\n", 27, HAL_MAX_DELAY);
-	              }
-	              else
-	              {
-	                  HAL_UART_Transmit(&huart3, (uint8_t*)"Ismeretlen parancs.\r\n", 22, HAL_MAX_DELAY);
-	              }
-	          }
-*/
-	 /* for (uint8_t i = 0; i < 4; i++) {
-	          float dist = Ultrasonic_ReadDistance(i);
-	          printf("Szenzor %d: %.2f cm\r\n", i, dist); // @suppress("Float formatting support")
+	  Obstacle_Update();
+	  Obstacle_Check();
+	  if (!Obstacle_IsBlocked()) {
+	          Control_Update();  // csak akkor frissít, ha nincs akadály
+	      } else {
+	          Obstacle_Handle(); // vagy közvetlen leállítás
 	      }
-	      HAL_Delay(250);
-*/
+
+	  HAL_Delay(100);  // vagy a kívánt ciklusidő
 
     /* USER CODE END WHILE */
 
@@ -280,36 +256,6 @@ void Green_led_blink(void)
 
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-    // UART3 – parancsalapú kézi vezérlés
-    if (huart->Instance == USART3)
-    {
-        if (rx_char != '\r' && rx_char != '\n' && rx_index < RX_BUFFER_SIZE - 1)
-        {
-            uart_rx_buffer[rx_index++] = rx_char;
-        }
-        else
-        {
-            uart_rx_buffer[rx_index] = '\0';  // lezárjuk a stringet
-            rx_index = 0;
-            uart_rx_ready = 1;
-
-            // közvetlen feldolgozás (opcionális):
-            MotorControl_HandleInput((uint8_t *)uart_rx_buffer[0]);  // vagy főciklusban
-        }
-
-        HAL_UART_Receive_IT(&huart3, &rx_char, 1);
-    }
-
-    // UART2 – Bluetooth + PID vezérlés
-    if (huart->Instance == USART2)
-    {
-        MotorControl_HandleBluetooth(bluetooth_rx_byte);
-        HAL_UART_Receive_IT(&huart2, &bluetooth_rx_byte, 1);
-    }
-}
-
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
@@ -325,7 +271,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         case GPIO_PIN_9: Hall_UpdateCounter(7); break;
     }
 }
-
+void LoRa_Reset(void)
+{
+    HAL_GPIO_WritePin(LoRa_RESET_GPIO_Port, LoRa_RESET_Pin, GPIO_PIN_RESET);
+    HAL_Delay(10);  // Legalább 5 ms
+    HAL_GPIO_WritePin(LoRa_RESET_GPIO_Port, LoRa_RESET_Pin, GPIO_PIN_SET);
+    HAL_Delay(10);
+}
 /* USER CODE END 4 */
 
 /**

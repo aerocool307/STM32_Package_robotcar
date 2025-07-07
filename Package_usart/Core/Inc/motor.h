@@ -30,17 +30,22 @@
 #define MOTOR_D1_BIT  0 // Motor 4 IN1
 #define MOTOR_D2_BIT  6 // Motor 4 IN2
 
+
+
+
 // Hall szenzor adatai
 #define HALL_COUNT 8
 // Motorvezérlési struktúra
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim14;
 
+
 // Motor irány enum
 typedef enum {
     FORWARD,
     BACKWARD,
-    RELEASE
+    RELEASE,
+	STOP
 } MotorDirection;
 
 // Motor azonosítók
@@ -65,6 +70,8 @@ void Motor_Init(void);
 void Motor_output(uint8_t output);
 void Motor_Set(MotorID motor, MotorDirection command, uint16_t speed);
 void Motor_SetSpeed(uint8_t motor_index, uint16_t speed);
+void Motor_SetPWM(uint8_t motor_index, uint16_t pwm_value);
+
 void MotorControl_HandleInput(uint8_t byte);
 
 

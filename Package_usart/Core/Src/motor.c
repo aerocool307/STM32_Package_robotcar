@@ -10,22 +10,18 @@
 #include <string.h>
 #include <stdio.h>
 
-#define CMD_BUFFER_SIZE 64
-
 static uint8_t latch_state = 0;
+
+//uart message
+#define CMD_BUFFER_SIZE 64
 static char cmd_buffer[CMD_BUFFER_SIZE];
 static uint8_t cmd_index = 0;
 
-//extern PIDController pid_m1,pid_m2,pid_m3,pid_m4;
-//static float pid_target_rpm = 0;
-
-
 extern UART_HandleTypeDef huart3;
-extern TIM_HandleTypeDef htim1;
-extern TIM_HandleTypeDef htim14;
 
 // Globális állapotváltozó a motorhoz
 uint8_t motor_state = 0x00; // vagy MOTOR_STOP ha definiálva van
+
 
 // Shift regiszter GPIO-k inicializálása
 void Motor_Init(void)
@@ -128,6 +124,11 @@ void Motor_Set(MotorID motor, MotorDirection command, MotorState speed)
                 latch_state &= ~(1 << b);
                 speed = 0;
                 break;
+            case STOP:
+                 latch_state &= ~(1 << a);
+                 latch_state &= ~(1 << b);
+                 speed = 0;
+                 break;
     }
 
     Motor_output(latch_state);
@@ -156,6 +157,15 @@ void Motor_SetSpeed(uint8_t motor_index, uint16_t speed)
             __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, speed);//PE11 (M4)
             break;
     }
+}
+
+void Motor_SetPWM(uint8_t motor_index, uint16_t pwm_value)
+{
+    if (motor_index >= MOTOR_COUNT) return;
+
+    if (pwm_value > 1000) pwm_value = 1000;  // max PWM védelem
+
+    Motor_Set(motor_index + 1, FORWARD, pwm_value);  // Irány: mindig előre
 }
 
 // UART-ból jövő parancs feldolgozása
